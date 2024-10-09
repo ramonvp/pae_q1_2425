@@ -1,0 +1,59 @@
+
+<launch>
+    <arg name="world_file"  default="worlds/empty.world" doc="Path to the world file to be loaded in Gazebo"/>
+    <arg name="show_gui"    default="true"               doc="Show Gazebo user interface"/>
+    <arg name="x"           default="0.0"/>
+    <arg name="y"           default="0.0"/>
+    <arg name="z"           default="0.0"/>
+    <arg name="namespace"   default="/" />
+    <arg name="rvizconfig"  default="$(find pcl_capture)/rviz/view_lidar.rviz" />
+
+    <param name="$(arg namespace)/robot_description" command="$(find xacro)/xacro '$(find pcl_capture)/urdf/single_lidar.urdf.xacro'" />
+
+    <!-- Run state publisher (Gets robot_description from parameter server)-->
+    <node
+        ns="$(arg namespace)"
+        pkg="robot_state_publisher"
+        type="robot_state_publisher"
+        name="robot_state_publisher"
+        output="screen">
+        <param name="publish_frequency" value="50.0" />
+    </node>
+
+    <include file="$(find gazebo_ros)/launch/empty_world.launch">
+        <arg name="world_name" value="$(arg world_file)"/>
+        <arg name="paused" value="true"/>
+        <arg name="use_sim_time" value="true"/>
+        <arg name="gui" value="$(arg show_gui)" />
+        <arg name="recording" value="false"/>
+        <arg name="debug" value="false"/>
+        <arg name="verbose" value="true"/>
+    </include>
+
+    <!-- Gazebo model spawner -->
+    <node
+        ns="$(arg namespace)"
+        pkg="gazebo_ros"
+        type="spawn_model"
+        name="spawn_motus_model"
+        output="screen"
+        launch-prefix="bash -c 'sleep 5.0; $0 $@' "
+        args="-robot_namespace $(arg namespace) 
+              -unpause 
+              -urdf 
+              -param robot_description 
+              -x $(arg x)
+              -y $(arg y)
+              -z $(arg z)
+              -model single_lidar">
+    </node>
+
+    <node
+        ns="$(arg namespace)"
+        name="rviz"
+        pkg="rviz"
+        type="rviz"
+        args="-d $(arg rvizconfig)"
+        required="true" />
+
+</launch>

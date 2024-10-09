@@ -1,0 +1,25 @@
+<?xml version="1.0" ?>
+<robot name="single_lidar" xmlns:xacro="http://ros.org/wiki/xacro">
+
+<xacro:macro name="single_lidar">
+
+    <material name="blue"><color rgba="0.0 0.0 0.7 1"/></material>
+
+    <link name="base_link">
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <cylinder length="0.1" radius="0.5"/>
+            </geometry>
+            <material name="blue"/>
+        </visual>
+    </link>
+
+
+</xacro:macro>
+
+
+
+<xacro:single_lidar/>
+
+</robot>
