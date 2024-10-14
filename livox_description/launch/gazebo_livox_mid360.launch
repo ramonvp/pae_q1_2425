@@ -1,0 +1,69 @@
+<launch>
+    <arg name="namespace" default="/" />
+    <arg name="run_joint_state_publisher" default="true" doc="Run joint state publisher"/>
+    <arg name="joint_state_gui"  default="true" doc="Enable joint state publisher gui"/>
+    <arg name="show_rviz"  default="true" doc="Launch RVIZ"/>
+    <arg name="rvizconfig" default="$(find livox_description)/rviz/urdf.rviz" />
+
+
+    <param name="$(arg namespace)/robot_description" command="$(find xacro)/xacro $(find livox_description)/urdf/livox_mid360.urdf.xacro" />
+
+    <!-- Start gazebo and load the world -->
+    <arg name="paused" default="false"/>
+    <arg name="use_sim_time" default="true"/>
+    <arg name="gui" default="true"/>
+    <arg name="headless" default="false"/>
+    <arg name="debug" default="false"/>
+    <arg name="verbose" default="false"/>
+
+    <include file="$(find gazebo_ros)/launch/empty_world.launch" >
+        <arg name="paused" value="$(arg paused)"/>
+        <arg name="use_sim_time" value="$(arg use_sim_time)"/>
+        <arg name="gui" value="$(arg gui)"/>
+        <arg name="headless" value="$(arg headless)"/>
+        <arg name="debug" value="$(arg debug)"/>
+        <arg name="verbose" value="$(arg verbose)"/>
+    </include>
+
+    <node pkg="gazebo_ros" type="spawn_model" name="spawn_model" args="-urdf -param $(arg namespace)/robot_description -model example"/>
+
+    <!-- Run state publisher (Gets robot_description from parameter server)-->
+    <node
+        ns="$(arg namespace)"
+        pkg="robot_state_publisher"
+        type="robot_state_publisher"
+        name="robot_state_publisher"
+        output="screen">
+        <param name="publish_frequency" value="50.0" />
+    </node>
+
+    <group if="$(arg run_joint_state_publisher)">
+        <group unless="$(arg joint_state_gui)">
+            <node
+                ns="$(arg namespace)"
+                name="joint_state_publisher"
+                pkg="joint_state_publisher"
+                type="joint_state_publisher"
+                output="screen"/>
+        </group>
+
+        <group if="$(arg joint_state_gui)">
+            <node
+                ns="$(arg namespace)"
+                pkg="joint_state_publisher_gui"
+                type="joint_state_publisher_gui"
+                name="joint_state_publisher_gui"
+                output="screen"/>
+        </group>
+    </group>
+
+    <group if="$(arg show_rviz)">
+        <node
+            ns="$(arg namespace)"
+            name="rviz"
+            pkg="rviz"
+            type="rviz"
+            args="-d $(arg rvizconfig)"
+            required="true" />
+    </group>
+</launch>

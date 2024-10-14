@@ -1,0 +1,141 @@
+<?xml version="1.0"?>
+<robot name="livox_lidar" xmlns:xacro="http://ros.org/wiki/xacro">
+
+    <xacro:macro name="null_inertial">
+        <inertial>
+        <mass value="0.1"/>
+        <inertia ixx="0.01" ixy="0" ixz="0" iyy="0.01" iyz="0" izz="0.01"/>
+        </inertial>
+    </xacro:macro>
+
+    <material name="light_grey"><color rgba="0.6 0.6 0.6 1.0"/></material>
+    <material name="blue"><color rgba="0.0 0.0 0.6 1.0"/></material>
+
+    <xacro:macro name="Livox_Mid360" params="visualize:=True name:=livox gpu:=false">
+
+        <link name="${name}_base">
+            <!--xacro:null_inertial/-->
+            <visual> 
+                <origin xyz="0 0 0" rpy="0 0 0"/>
+                <geometry><mesh filename="package://livox_description/meshes/livox_mid360_base.STL"></mesh></geometry>
+                <material name="light_grey"/>
+            </visual>
+            <collision>
+                <origin xyz="0 0 0" rpy="0 0 0" />
+                <geometry><mesh filename="package://livox_description/meshes/livox_mid360_base.STL"></mesh></geometry>
+            </collision>
+        </link>
+
+        <link name="${name}_frame">
+            <xacro:null_inertial/>
+            <visual> 
+                <origin xyz="0 0 0" rpy="0 0 0"/>
+                <geometry><mesh filename="package://livox_description/meshes/livox_mid360_dome.STL"></mesh></geometry>
+                <material name="blue"/>
+            </visual>
+            <collision>
+                <origin xyz="0 0 0" rpy="0 0 0" />
+                <geometry><mesh filename="package://livox_description/meshes/livox_mid360_dome.STL"></mesh></geometry>
+            </collision>
+        </link>
+
+        <joint name="${name}_to_${name}_base_joint" type="fixed">
+            <parent link="${name}_base"/>
+            <child link="${name}_frame"/>
+            <origin xyz="0.0 0.0 0.0415" rpy="0 0 0"/>
+        </joint>
+
+
+
+    <!-- Gazebo requires the velodyne_gazebo_plugins package -->
+    <gazebo reference="${name}_frame">
+      <xacro:if value="${gpu}">
+        <sensor type="gpu_ray" name="${name}-mid360">
+          <pose>0 0 0 0 0 0</pose>
+          <visualize>false</visualize>
+          <update_rate>10.0</update_rate>
+          <ray>
+            <scan>
+              <horizontal>
+                <samples>360</samples>
+                <resolution>1</resolution>
+                <min_angle>-${pi}</min_angle>
+                <max_angle>${pi}</max_angle>
+              </horizontal>
+              <vertical>
+                <samples>32</samples>
+                <resolution>1</resolution>
+                <min_angle>-${9.0*pi/180.0}</min_angle>
+                <max_angle> ${59.0*pi/180.0}</max_angle>
+              </vertical>
+            </scan>
+            <range>
+              <min>0.1</min>
+              <max>100.0</max>
+              <resolution>0.001</resolution>
+            </range>
+            <noise>
+              <type>gaussian</type>
+              <mean>0.0</mean>
+              <stddev>0.0</stddev>
+            </noise>
+          </ray>
+          <plugin name="gazebo_ros_laser_controller" filename="libgazebo_ros_livox_gpu_laser.so">
+            <topicName>${name}/lidar</topicName>
+            <frameName>${name}_frame</frameName>
+            <organize_cloud>false</organize_cloud>
+            <min_range>0.1</min_range>
+            <max_range>100.0</max_range>
+            <gaussianNoise>0.0</gaussianNoise>
+          </plugin>
+        </sensor>
+      </xacro:if>
+
+      <xacro:unless value="${gpu}">
+        <sensor type="ray" name="${name}-mid360">
+          <pose>0 0 0 0 0 0</pose>
+          <visualize>false</visualize>
+          <update_rate>10.0</update_rate>
+          <ray>
+            <scan>
+              <horizontal>
+                <samples>360</samples>
+                <resolution>1</resolution>
+                <min_angle>-${pi}</min_angle>
+                <max_angle>${pi}}</max_angle>
+              </horizontal>
+              <vertical>
+                <samples>32</samples>
+                <resolution>1</resolution>
+                <min_angle>-${9.0*pi/180.0}</min_angle>
+                <max_angle> ${59.00*pi/180.0}</max_angle>
+              </vertical>
+            </scan>
+            <range>
+              <min>0.1</min>
+              <max>100.0</max>
+              <resolution>0.001</resolution>
+            </range>
+            <noise>
+              <type>gaussian</type>
+              <mean>0.0</mean>
+              <stddev>0.0</stddev>
+            </noise>
+          </ray>
+          <plugin name="gazebo_ros_laser_controller" filename="libgazebo_ros_livox_laser.so">
+            <topicName>${name}/lidar</topicName>
+            <frameName>${name}_frame</frameName>
+            <organize_cloud>false</organize_cloud>
+            <min_range>0.1</min_range>
+            <max_range>100.0</max_range>
+            <gaussianNoise>0.0</gaussianNoise>
+          </plugin>
+        </sensor>
+      </xacro:unless>
+    </gazebo>
+
+    </xacro:macro>
+    
+    <xacro:Livox_Mid360 name="livox"/>
+
+</robot>
